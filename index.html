@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Documentação Técnica / Documentation Generator</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts - Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Biblioteca html2pdf.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <style>
+        body { 
+            background-color: #f3f4f6; 
+            font-family: 'Inter', sans-serif;
+        }
+        .card-formulario { 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); 
+            border: none;
+            border-radius: 12px;
+        }
+        
+        /* CONTAINER EXCLUSIVO DO PDF */
+        #wrapper-pdf {
+            position: absolute;
+            left: -9999px;
+            top: 0;
+            width: 190mm;
+        }
+
+        /* ESTILIZAÇÃO DO DOCUMENTO PDF */
+        #conteudo-pdf { 
+            font-family: 'Inter', sans-serif;
+            color: #1f2937;
+            background: #ffffff;
+            padding: 0;
+            margin: 0;
+        }
+        .pdf-header {
+            border-bottom: 3px solid #3b82f6;
+            padding-bottom: 20px;
+            margin-bottom: 25px;
+        }
+        .pdf-title {
+            color: #1d4ed8;
+            font-weight: 700;
+            font-size: 26px;
+            letter-spacing: -0.5px;
+            line-height: 1.3;
+            margin-bottom: 8px;
+        }
+        .pdf-meta {
+            font-size: 13px;
+            color: #6b7280;
+            font-weight: 500;
+        }
+        .pdf-section-title {
+            color: #111827;
+            font-size: 16px;
+            font-weight: 600;
+            margin-top: 22px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-left: 4px solid #3b82f6;
+            padding-left: 10px;
+        }
+        .pdf-text {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #374151;
+            white-space: pre-wrap;
+            margin-bottom: 20px;
+            background-color: #f9fafb;
+            padding: 12px 16px;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container my-5">
+    <!-- Seletor de Idioma no Topo -->
+    <div class="d-flex justify-content-end mb-3">
+        <div class="btn-group" role="group" aria-label="Language Selector">
+            <button type="button" class="btn btn-outline-primary active" id="btn-lang-pt" onclick="mudarIdioma('pt')">PT-BR</button>
+            <button type="button" class="btn btn-outline-primary" id="btn-lang-en" onclick="mudarIdioma('en')">EN</button>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card card-formulario p-4 bg-white">
+                <h2 class="text-center mb-2 fw-bold text-dark" id="lbl-app-title">Gerador de Documentação</h2>
+                <p class="text-muted text-center mb-4" id="lbl-app-subtitle">Insira os dados técnicos abaixo para exportar um PDF limpo e formatado.</p>
+                <hr class="text-muted">
+
+                <!-- Formulário -->
+                <form id="form-documentacao">
+                    <div class="mb-3">
+                        <label for="titulo" class="form-label fw-semibold text-secondary" id="lbl-titulo">Título da Documentação</label>
+                        <input type="text" class="form-control form-control-lg" id="titulo" placeholder="Ex: Como habilitar o módulo MyAsset" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="descricao" class="form-label fw-semibold text-secondary" id="lbl-descricao">1. Descrição / Objetivo</label>
+                        <textarea class="form-control" id="descricao" rows="3" placeholder="Breve resumo..." required></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="tabelas" class="form-label fw-semibold text-secondary" id="lbl-tabelas">2. Tabelas do Banco de Dados</label>
+                        <textarea class="form-control" id="tabelas" rows="3" placeholder="Ex: Tabelas afetadas..."></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="permissoes" class="form-label fw-semibold text-secondary" id="lbl-permissoes">3. Permissões necessárias</label>
+                        <textarea class="form-control" id="permissoes" rows="3" placeholder="Ex: Perfis de acesso necessários..."></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="passo-a-passo" class="form-label fw-semibold text-secondary" id="lbl-passo-a-passo">4. Passo a Passo / Instruções</label>
+                        <textarea class="form-control" id="passo-a-passo" rows="5" placeholder="Passo 1..." required></textarea>
+                    </div>
+
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="button" class="btn btn-primary btn-lg fw-medium" id="btn-submit" onclick="gerarPDF()">
+                            Exportar Documento PDF
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CONTAINER DO PDF: Traduzido dinamicamente via JS antes da captura -->
+<div id="wrapper-pdf">
+    <div id="conteudo-pdf">
+        <div class="pdf-header">
+            <div id="pdf-titulo" class="pdf-title"></div>
+            <div class="pdf-meta"><span id="pdf-meta-label">DOCUMENTAÇÃO TÉCNICA</span> &bull; <span id="pdf-date-label">Gerado em</span>: <span id="pdf-data"></span></div>
+        </div>
+        
+        <div class="pdf-section-title" id="pdf-lbl-sec1">1. Descrição / Objetivo</div>
+        <div id="pdf-descricao" class="pdf-text"></div>
+
+        <div class="pdf-section-title" id="pdf-lbl-sec2">2. Tabelas do Banco de Dados</div>
+        <div id="pdf-tabelas" class="pdf-text"></div>
+
+        <div class="pdf-section-title" id="pdf-lbl-sec3">3. Permissões</div>
+        <div id="pdf-permissoes" class="pdf-text"></div>
+
+        <div class="pdf-section-title" id="pdf-lbl-sec4">4. Passo a Passo / Instruções</div>
+        <div id="pdf-passo-a-passo" class="pdf-text"></div>
+    </div>
+</div>
+
+<script>
+// Controle de idioma atual (padrão 'pt')
+let idiomaAtual = 'pt';
+
+// Objeto contendo todos os textos do sistema
+const traducoes = {
+    pt: {
+        appTitle: "Gerador de Documentação",
+        appSubtitle: "Insira os dados técnicos abaixo para exportar um PDF limpo e formatado.",
+        titulo: "Título da Documentação",
+        descricao: "1. Descrição / Objetivo",
+        tabelas: "2. Tabelas do Banco de Dados",
+        permissoes: "3. Permissões necessárias",
+        passoAPasso: "4. Passo a Passo / Instruções",
+        btnSubmit: "Exportar Documento PDF",
+        
+        // Placeholders dos campos
+        phTitulo: "Ex: Como habilitar o módulo MyAsset",
+        phDescricao: "Breve resumo do objetivo desta configuração...",
+        phTabelas: "Ex: Tabelas afetadas, inserts ou updates necessários...",
+        phPermissoes: "Ex: Perfis de acesso, chaves ou roles necessárias...",
+        phPasso: "Passo 1...\nPasso 2...\nPasso 3...",
+        
+        // Validação e PDF text padrão
+        alertaCampos: "Por favor, preencha os campos obrigatórios (Título, Descrição e Passo a Passo).",
+        pdfMeta: "DOCUMENTAÇÃO TÉCNICA",
+        pdfGeradoEm: "Gerado em",
+        vazioTabelas: "Nenhuma tabela específica foi afetada.",
+        vazioPermissoes: "Nenhuma permissão especial é necessária.",
+        sufixoArquivo: "_doc.pdf"
+    },
+    en: {
+        appTitle: "Documentation Generator",
+        appSubtitle: "Enter the technical data below to export a clean, well-formatted PDF.",
+        titulo: "Documentation Title",
+        descricao: "1. Description / Objective",
+        tabelas: "2. Database Tables",
+        permissoes: "3. Required Permissions",
+        passoAPasso: "4. Step-by-Step Instructions",
+        btnSubmit: "Export PDF Document",
+        
+        phTitulo: "e.g., How to enable the MyAsset module",
+        phDescricao: "Brief summary of this configuration's goal...",
+        phTabelas: "e.g., Affected tables, required inserts or updates...",
+        phPermissoes: "e.g., Access profiles, keys, or required roles...",
+        phPasso: "Step 1...\nStep 2...\nStep 3...",
+        
+        alertaCampos: "Please fill in the required fields (Title, Description, and Step-by-Step).",
+        pdfMeta: "TECHNICAL DOCUMENTATION",
+        pdfGeradoEm: "Generated on",
+        vazioTabelas: "No specific tables were affected.",
+        vazioPermissoes: "No special permissions are required.",
+        sufixoArquivo: "_documentation.pdf"
+    }
+};
+
+function mudarIdioma(lang) {
+    idiomaAtual = lang;
+    const t = traducoes[lang];
+
+    // Atualiza classes ativas dos botões
+    if(lang === 'pt') {
+        document.getElementById('btn-lang-pt').classList.add('active');
+        document.getElementById('btn-lang-en').classList.remove('active');
+    } else {
+        document.getElementById('btn-lang-en').classList.add('active');
+        document.getElementById('btn-lang-pt').classList.remove('active');
+    }
+
+    // Traduz textos da tela (Formulário)
+    document.getElementById('lbl-app-title').innerText = t.appTitle;
+    document.getElementById('lbl-app-subtitle').innerText = t.appSubtitle;
+    document.getElementById('lbl-titulo').innerText = t.titulo;
+    document.getElementById('lbl-descricao').innerText = t.descricao;
+    document.getElementById('lbl-tabelas').innerText = t.tabelas;
+    document.getElementById('lbl-permissoes').innerText = t.permissoes;
+    document.getElementById('lbl-passo-a-passo').innerText = t.passoAPasso;
+    document.getElementById('btn-submit').innerText = t.btnSubmit;
+
+    // Traduz os Placeholders das caixas de texto
+    document.getElementById('titulo').placeholder = t.phTitulo;
+    document.getElementById('descricao').placeholder = t.phDescricao;
+    document.getElementById('tabelas').placeholder = t.phTabelas;
+    document.getElementById('permissoes').placeholder = t.phPermissoes;
+    document.getElementById('passo-a-passo').placeholder = t.phPasso;
+
+    // Traduz as estruturas de títulos fixos do PDF oculto
+    document.getElementById('pdf-meta-label').innerText = t.pdfMeta;
+    document.getElementById('pdf-date-label').innerText = t.pdfGeradoEm;
+    document.getElementById('pdf-lbl-sec1').innerText = t.descricao;
+    document.getElementById('pdf-lbl-sec2').innerText = t.tabelas;
+    document.getElementById('pdf-lbl-sec3').innerText = t.permissoes;
+    document.getElementById('pdf-lbl-sec4').innerText = t.passoAPasso;
+}
+
+function gerarPDF() {
+    const t = traducoes[idiomaAtual];
+
+    // 1. Coleta os valores digitados
+    const titulo = document.getElementById('titulo').value;
+    const descricao = document.getElementById('descricao').value;
+    const tabelas = document.getElementById('tabelas').value;
+    const permissoes = document.getElementById('permissoes').value;
+    const passoAPasso = document.getElementById('passo-a-passo').value;
+
+    // Validação usando a mensagem do idioma selecionado
+    if (!titulo || !descricao || !passoAPasso) {
+        alert(t.alertaCampos);
+        return;
+    }
+
+    // Formata a data com base no idioma
+    const localData = idiomaAtual === 'pt' ? 'pt-BR' : 'en-US';
+    
+    // 2. Transfere os dados dinâmicos para o template do PDF
+    document.getElementById('pdf-titulo').innerText = titulo;
+    document.getElementById('pdf-data').innerText = new Date().toLocaleDateString(localData);
+    document.getElementById('pdf-descricao').innerText = descricao;
+    document.getElementById('pdf-tabelas').innerText = tabelas || t.vazioTabelas;
+    document.getElementById('pdf-permissoes').innerText = permissoes || t.vazioPermissoes;
+    document.getElementById('pdf-passo-a-passo').innerText = passoAPasso;
+
+    // 3. Configurações de exportação
+    const elemento = document.getElementById('conteudo-pdf');
+    
+    const nomeArquivo = titulo.toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Limpa acentos
+        .replace(/[^a-z0-9]/g, "_") 
+        + t.sufixoArquivo;
+    
+    const opcoes = {
+        margin:       [15, 15, 15, 15],
+        filename:     nomeArquivo,
+        image:        { type: 'jpeg', quality: 1.0 },
+        html2canvas:  { 
+            scale: 2, 
+            scrollY: 0, 
+            useCORS: true 
+        },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    // 4. Salva o documento
+    html2pdf().set(opcoes).from(elemento).save();
+}
+</script>
+
+</body>
+</html>
