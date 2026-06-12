@@ -1,5 +1,7 @@
 # 📄 Gerador de Documentação Técnica / Technical Documentation Generator
 
+> 🌐 **Acesse o projeto online / Access the project online:** [https://carolmesqu.github.io/tech-documentation-generator/](https://carolmesqu.github.io/tech-documentation-generator/)
+
 Um gerador de documentações técnicas bilingue (PT-BR / EN) que roda diretamente no navegador. Ideal para padronizar processos, mapear tabelas de banco de dados, permissões e passos operacionais, exportando o resultado em um PDF limpo, moderno e otimizado.
 
 ## 🚀 Funcionalidades / Features
@@ -12,7 +14,7 @@ Um gerador de documentações técnicas bilingue (PT-BR / EN) que roda diretamen
 
 - **HTML5**
 - **CSS3** (Bootstrap 5 & Google Fonts)
-- **JavaScript** (Vanila / ES6)
+- **JavaScript** (Vanilla / ES6)
 - **html2pdf.js** (Biblioteca para conversão de HTML para PDF)
 
 ## 📂 Como utilizar / How to use
